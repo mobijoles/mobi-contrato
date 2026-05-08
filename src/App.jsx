@@ -17,7 +17,7 @@ const REFS=[
   {nombre:"Estante en PVC",precio:30},
   {nombre:"Hablador",precio:20},
 ];
-const PB_MAP={"6 slots":4,"4 slots":2,"24 slots":20};
+const PB_MAP={"24 slots":20,"6 slots":4,"4 slots":2};
 function getPBCount(nombre){for(const[k,v]of Object.entries(PB_MAP)){if(nombre.includes(k))return v;}return 0;}
 const TODAY=new Date();
 const TODAY_D=String(TODAY.getDate()).padStart(2,"0");
