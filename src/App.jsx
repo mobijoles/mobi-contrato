@@ -4,7 +4,7 @@ const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACpCAYAAACR
 
 const MONTHS=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const DAYS=Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0"));
-const YEARS=Array.from({length:8},(_,i)=>String(2024+i));
+const YEARS=Array.from({length:8},(_,i)=>String(new Date().getFullYear()+i));
 const REFS=[
   {nombre:"Estación 6 slots (antigua)",precio:173},
   {nombre:"Estación de 4 slots SIN pantalla",precio:191},
@@ -17,6 +17,8 @@ const REFS=[
   {nombre:"Estante en PVC",precio:30},
   {nombre:"Hablador",precio:20},
 ];
+const PB_MAP={"6 slots":4,"4 slots":2,"24 slots":20};
+function getPBCount(nombre){for(const[k,v]of Object.entries(PB_MAP)){if(nombre.includes(k))return v;}return 0;}
 const TODAY=new Date();
 const TODAY_D=String(TODAY.getDate()).padStart(2,"0");
 const TODAY_M=MONTHS[TODAY.getMonth()];
@@ -216,14 +218,16 @@ export default function App(){
   const printRef=useRef();
 
   const upd=(sec,fld,val)=>{setData(p=>({...p,[sec]:{...p[sec],[fld]:val}}));if(errors[`${sec}.${fld}`]){setErrors(p=>{const n={...p};delete n[`${sec}.${fld}`];return n;});}};
-  const updEquip=(i,fld,val)=>{setData(p=>{const eq=[...p.equipos];const row={...eq[i],[fld]:val};if(fld==="tipo"){const ref=REFS.find(r=>r.nombre===val);row.unitario=ref?String(ref.precio):"";row.total=ref&&row.cant?String(Number(row.cant)*ref.precio):"";}if(fld==="cant"){const u=Number(row.unitario)||0;row.total=val?String(Number(val)*u):"";}eq[i]=row;return{...p,equipos:eq}});if(errors["equipos"])setErrors(p=>{const n={...p};delete n.equipos;return n;});};
+  const recalcPB=(eq)=>{const pbRef=REFS.find(r=>r.nombre==="Power bank");let totalPB=0;eq.forEach(r=>{if(r._auto)return;const c=getPBCount(r.tipo);if(c>0)totalPB+=c*(Number(r.cant)||0);});const pbIdx=eq.findIndex(r=>r._auto);if(totalPB>0){const pbRow={tipo:"Power bank",cant:String(totalPB),unitario:String(pbRef.precio),total:String(totalPB*pbRef.precio),_auto:true};if(pbIdx>=0)eq[pbIdx]=pbRow;else eq.push(pbRow);}else if(pbIdx>=0){eq.splice(pbIdx,1);}return eq;};
+  const updEquip=(i,fld,val)=>{setData(p=>{let eq=[...p.equipos];const row={...eq[i],[fld]:val};if(fld==="tipo"){const ref=REFS.find(r=>r.nombre===val);row.unitario=ref?String(ref.precio):"";row.total=ref&&row.cant?String(Number(row.cant)*ref.precio):"";}if(fld==="cant"){const u=Number(row.unitario)||0;row.total=val?String(Number(val)*u):"";}eq[i]=row;eq=recalcPB(eq);return{...p,equipos:eq}});if(errors["equipos"])setErrors(p=>{const n={...p};delete n.equipos;return n;});};
   const addRow=()=>setData(p=>({...p,equipos:[...p.equipos,{tipo:"",cant:"",unitario:"",total:""}]}));
-  const removeRow=i=>setData(p=>{const eq=[...p.equipos];eq.splice(i,1);return{...p,equipos:eq.length?eq:[{tipo:"",cant:"",unitario:"",total:""}]};});
+  const removeRow=i=>setData(p=>{let eq=[...p.equipos].filter((_,j)=>j!==i);eq=recalcPB(eq);return{...p,equipos:eq.length?eq:[{tipo:"",cant:"",unitario:"",total:""}]};});
+
 
   const validate=(s)=>{
     const e={};const d=data;
     if(s===0){if(!d.aliado.empresa)e["aliado.empresa"]="Requerido";if(!d.aliado.nit)e["aliado.nit"]="Requerido";if(!d.aliado.dir)e["aliado.dir"]="Requerido";if(!d.aliado.tel)e["aliado.tel"]="Requerido";if(!d.aliado.rep)e["aliado.rep"]="Requerido";if(!d.aliado.correo)e["aliado.correo"]="Requerido";if(d.aliado.correo&&!d.aliado.correo.includes("@"))e["aliado.correo"]="Formato inválido";if(!d.aliado.cc)e["aliado.cc"]="Requerido";if(!d.aliado.ccExp)e["aliado.ccExp"]="Requerido";}
-    if(s===1){if(!d.canales.correo)e["canales.correo"]="Requerido";if(d.canales.correo&&!d.canales.correo.includes("@"))e["canales.correo"]="Formato inválido";if(!d.canales.whatsapp)e["canales.whatsapp"]="Requerido";if(!d.duracion.diaI)e["duracion.diaI"]="Requerido";if(!d.duracion.mesI)e["duracion.mesI"]="Requerido";if(!d.duracion.anioI)e["duracion.anioI"]="Requerido";if(!d.duracion.diaF)e["duracion.diaF"]="Requerido";if(!d.duracion.mesF)e["duracion.mesF"]="Requerido";if(!d.duracion.anioF)e["duracion.anioF"]="Requerido";}
+    if(s===1){if(!d.canales.correo)e["canales.correo"]="Requerido";if(d.canales.correo&&!d.canales.correo.includes("@"))e["canales.correo"]="Formato inválido";if(!d.canales.whatsapp)e["canales.whatsapp"]="Requerido";if(!d.duracion.diaI)e["duracion.diaI"]="Requerido";if(!d.duracion.mesI)e["duracion.mesI"]="Requerido";if(!d.duracion.anioI)e["duracion.anioI"]="Requerido";}
     if(s===2){if(!d.equipos.some(r=>r.tipo&&r.cant))e["equipos"]="Diligencia al menos una fila completa (tipo y cantidad)";}
     if(s===3){if(!d.banco.banco)e["banco.banco"]="Requerido";if(!d.banco.prop)e["banco.prop"]="Requerido";if(!d.banco.id)e["banco.id"]="Requerido";if(!d.banco.tipo)e["banco.tipo"]="Requerido";if(!d.banco.num)e["banco.num"]="Requerido";}
     return e;
@@ -280,8 +284,27 @@ export default function App(){
           <p style={{fontSize:14,fontWeight:600,color:C.purple,margin:"8px 0 20px"}}>Duración del contrato</p>
           <p style={{fontSize:11,color:C.muted,marginBottom:12}}>Fecha de inicio</p>
           <Row cols={3}><Select label="Día" value={data.duracion.diaI} onChange={v=>upd("duracion","diaI",v)} options={DAYS} error={er("duracion.diaI")}/><Select label="Mes" value={data.duracion.mesI} onChange={v=>upd("duracion","mesI",v)} options={MONTHS} error={er("duracion.mesI")}/><Select label="Año" value={data.duracion.anioI} onChange={v=>upd("duracion","anioI",v)} options={YEARS} error={er("duracion.anioI")}/></Row>
-          <p style={{fontSize:11,color:C.muted,marginBottom:12}}>Fecha de fin</p>
-          <Row cols={3}><Select label="Día" value={data.duracion.diaF} onChange={v=>upd("duracion","diaF",v)} options={DAYS} error={er("duracion.diaF")}/><Select label="Mes" value={data.duracion.mesF} onChange={v=>upd("duracion","mesF",v)} options={MONTHS} error={er("duracion.mesF")}/><Select label="Año" value={data.duracion.anioF} onChange={v=>upd("duracion","anioF",v)} options={YEARS} error={er("duracion.anioF")}/></Row>
+          {(()=>{
+            const di=data.duracion.diaI,mi=data.duracion.mesI,ai=data.duracion.anioI;
+            if(di&&mi&&ai){
+              const mIdx=MONTHS.indexOf(mi);
+              const start=new Date(Number(ai),mIdx,Number(di));
+              const end=new Date(start);end.setFullYear(end.getFullYear()+1);end.setDate(end.getDate()-1);
+              const ed=String(end.getDate()).padStart(2,"0"),em=MONTHS[end.getMonth()],ey=String(end.getFullYear());
+              if(data.duracion.diaF!==ed||data.duracion.mesF!==em||data.duracion.anioF!==ey){
+                setTimeout(()=>{upd("duracion","diaF",ed);upd("duracion","mesF",em);upd("duracion","anioF",ey);},0);
+              }
+              return <div style={{background:"#f8f8f6",borderRadius:8,padding:16,marginBottom:18}}>
+                <p style={{fontSize:11,color:C.muted,marginBottom:4}}>Fecha de finalización (12 meses)</p>
+                <p style={{fontSize:14,fontWeight:600,color:C.dark}}>{ed} de {em} de {ey}</p>
+                <p style={{fontSize:10,color:C.muted,marginTop:4,fontStyle:"italic"}}>Calculada automáticamente: inicio + 12 meses − 1 día.</p>
+              </div>;
+            }
+            return <div style={{background:"#f8f8f6",borderRadius:8,padding:16,marginBottom:18,opacity:0.6}}>
+              <p style={{fontSize:11,color:C.muted}}>Fecha de finalización</p>
+              <p style={{fontSize:12,color:C.muted,fontStyle:"italic"}}>Se calculará al completar la fecha de inicio.</p>
+            </div>;
+          })()}
           <div style={nav}><button style={btnS} onClick={()=>setStep(0)}>Atrás</button><button style={btnP} onClick={next}>Siguiente</button></div>
         </div>}
 
@@ -295,11 +318,11 @@ export default function App(){
               ))}</tr></thead>
               <tbody>{data.equipos.map((r,i)=>(
                 <tr key={i}>
-                  <td style={{padding:"6px 4px"}}><select value={r.tipo} onChange={e=>updEquip(i,"tipo",e.target.value)} style={{...eqCSS,cursor:"pointer",appearance:"auto"}}><option value="">Seleccionar equipo...</option>{REFS.map(ref=><option key={ref.nombre} value={ref.nombre}>{ref.nombre}</option>)}</select></td>
-                  <td style={{padding:"6px 4px",width:65}}><input value={r.cant} onChange={e=>updEquip(i,"cant",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"center"}} placeholder="0"/></td>
+                  <td style={{padding:"6px 4px"}}><select value={r.tipo} onChange={e=>updEquip(i,"tipo",e.target.value)} disabled={!!r._auto} style={{...eqCSS,cursor:r._auto?"default":"pointer",appearance:"auto",opacity:r._auto?0.7:1}}><option value="">Seleccionar equipo...</option>{REFS.map(ref=><option key={ref.nombre} value={ref.nombre}>{ref.nombre}</option>)}</select></td>
+                  <td style={{padding:"6px 4px",width:65}}><input value={r.cant} onChange={e=>updEquip(i,"cant",numOnly(e.target.value))} inputMode="numeric" disabled={!!r._auto} style={{...eqCSS,textAlign:"center",opacity:r._auto?0.7:1}} placeholder="0"/></td>
                   <td style={{padding:"6px 4px",width:100}}><div style={{...eqCSS,textAlign:"right",background:"#f0f0ee",color:r.unitario?"#333":"#aaa",display:"flex",alignItems:"center",justifyContent:"flex-end",minHeight:36}}>{r.unitario?`$${r.unitario}`:"—"}</div></td>
                   <td style={{padding:"6px 4px",width:100}}><div style={{...eqCSS,textAlign:"right",background:"#f0f0ee",color:r.total?"#333":"#aaa",fontWeight:r.total?600:400,display:"flex",alignItems:"center",justifyContent:"flex-end",minHeight:36}}>{r.total?`$${r.total}`:"—"}</div></td>
-                  <td style={{padding:"6px 4px",width:36}}>{data.equipos.length>1&&<button onClick={()=>removeRow(i)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#c0392b",fontWeight:700,lineHeight:1}} title="Eliminar fila">×</button>}</td>
+                  <td style={{padding:"6px 4px",width:36}}>{data.equipos.length>1&&!r._auto&&<button onClick={()=>removeRow(i)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#c0392b",fontWeight:700,lineHeight:1}} title="Eliminar fila">×</button>}</td>
                 </tr>
               ))}</tbody>
             </table>
