@@ -5,6 +5,18 @@ const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACpCAYAAACR
 const MONTHS=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const DAYS=Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0"));
 const YEARS=Array.from({length:8},(_,i)=>String(2024+i));
+const REFS=[
+  {nombre:"Estación 6 slots (antigua)",precio:173},
+  {nombre:"Estación de 4 slots SIN pantalla",precio:191},
+  {nombre:"Estación de 4 slots CON pantalla",precio:297},
+  {nombre:"Estación de 4 slots CON pantalla y datáfono",precio:450},
+  {nombre:"Estación de 24 slots con pantalla",precio:1350},
+  {nombre:"Estación de 24 slots con pantalla para exteriores",precio:1575},
+  {nombre:"Estación de 24 slots con pantalla y datáfono",precio:1725},
+  {nombre:"Power bank",precio:16},
+  {nombre:"Estante en PVC",precio:30},
+  {nombre:"Hablador",precio:20},
+];
 const TODAY=new Date();
 const TODAY_D=String(TODAY.getDate()).padStart(2,"0");
 const TODAY_M=MONTHS[TODAY.getMonth()];
@@ -204,7 +216,7 @@ export default function App(){
   const printRef=useRef();
 
   const upd=(sec,fld,val)=>{setData(p=>({...p,[sec]:{...p[sec],[fld]:val}}));if(errors[`${sec}.${fld}`]){setErrors(p=>{const n={...p};delete n[`${sec}.${fld}`];return n;});}};
-  const updEquip=(i,fld,val)=>{setData(p=>{const eq=[...p.equipos];eq[i]={...eq[i],[fld]:val};return{...p,equipos:eq}});if(errors["equipos"])setErrors(p=>{const n={...p};delete n.equipos;return n;});};
+  const updEquip=(i,fld,val)=>{setData(p=>{const eq=[...p.equipos];const row={...eq[i],[fld]:val};if(fld==="tipo"){const ref=REFS.find(r=>r.nombre===val);row.unitario=ref?String(ref.precio):"";row.total=ref&&row.cant?String(Number(row.cant)*ref.precio):"";}if(fld==="cant"){const u=Number(row.unitario)||0;row.total=val?String(Number(val)*u):"";}eq[i]=row;return{...p,equipos:eq}});if(errors["equipos"])setErrors(p=>{const n={...p};delete n.equipos;return n;});};
   const addRow=()=>setData(p=>({...p,equipos:[...p.equipos,{tipo:"",cant:"",unitario:"",total:""}]}));
   const removeRow=i=>setData(p=>{const eq=[...p.equipos];eq.splice(i,1);return{...p,equipos:eq.length?eq:[{tipo:"",cant:"",unitario:"",total:""}]};});
 
@@ -283,10 +295,10 @@ export default function App(){
               ))}</tr></thead>
               <tbody>{data.equipos.map((r,i)=>(
                 <tr key={i}>
-                  <td style={{padding:"6px 4px"}}><input value={r.tipo} onChange={e=>updEquip(i,"tipo",e.target.value)} style={eqCSS} placeholder="Ej: Estación HCPS-002"/></td>
-                  <td style={{padding:"6px 4px",width:65}}><input value={r.cant} onChange={e=>updEquip(i,"cant",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"center"}}/></td>
-                  <td style={{padding:"6px 4px",width:100}}><input value={r.unitario} onChange={e=>updEquip(i,"unitario",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"right"}} placeholder="$"/></td>
-                  <td style={{padding:"6px 4px",width:100}}><input value={r.total} onChange={e=>updEquip(i,"total",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"right"}} placeholder="$"/></td>
+                  <td style={{padding:"6px 4px"}}><select value={r.tipo} onChange={e=>updEquip(i,"tipo",e.target.value)} style={{...eqCSS,cursor:"pointer",appearance:"auto"}}><option value="">Seleccionar equipo...</option>{REFS.map(ref=><option key={ref.nombre} value={ref.nombre}>{ref.nombre}</option>)}</select></td>
+                  <td style={{padding:"6px 4px",width:65}}><input value={r.cant} onChange={e=>updEquip(i,"cant",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"center"}} placeholder="0"/></td>
+                  <td style={{padding:"6px 4px",width:100}}><div style={{...eqCSS,textAlign:"right",background:"#f0f0ee",color:r.unitario?"#333":"#aaa",display:"flex",alignItems:"center",justifyContent:"flex-end",minHeight:36}}>{r.unitario?`$${r.unitario}`:"—"}</div></td>
+                  <td style={{padding:"6px 4px",width:100}}><div style={{...eqCSS,textAlign:"right",background:"#f0f0ee",color:r.total?"#333":"#aaa",fontWeight:r.total?600:400,display:"flex",alignItems:"center",justifyContent:"flex-end",minHeight:36}}>{r.total?`$${r.total}`:"—"}</div></td>
                   <td style={{padding:"6px 4px",width:36}}>{data.equipos.length>1&&<button onClick={()=>removeRow(i)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#c0392b",fontWeight:700,lineHeight:1}} title="Eliminar fila">×</button>}</td>
                 </tr>
               ))}</tbody>
