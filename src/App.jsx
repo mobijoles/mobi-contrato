@@ -5,14 +5,18 @@ const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAACpCAYAAACR
 const MONTHS=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const DAYS=Array.from({length:31},(_,i)=>String(i+1).padStart(2,"0"));
 const YEARS=Array.from({length:8},(_,i)=>String(2024+i));
+const TODAY=new Date();
+const TODAY_D=String(TODAY.getDate()).padStart(2,"0");
+const TODAY_M=MONTHS[TODAY.getMonth()];
+const TODAY_Y=String(TODAY.getFullYear());
 
 const initialData={
   aliado:{empresa:"",nit:"",dir:"",tel:"",rep:"",correo:"",cc:"",ccExp:""},
   canales:{correo:"",whatsapp:""},
   duracion:{diaI:"",mesI:"",anioI:"",diaF:"",mesF:"",anioF:""},
   equipos:[{tipo:"",cant:"",unitario:"",total:""}],
-  banco:{banco:"",prop:"",id:"",tipo:"",num:"",tel:"",correo:""},
-  firma:{dia:"",mes:"",anio:""},
+  banco:{banco:"",prop:"",id:"",tipo:"",num:""},
+  firma:{dia:TODAY_D,mes:TODAY_M,anio:TODAY_Y},
 };
 
 const steps=["Información del Aliado","Canales y Duración","Equipos","Datos Bancarios","Generar Contrato"];
@@ -33,13 +37,10 @@ function Input({label,value,onChange,placeholder,numeric,hint,error}){
   const handle=v=>{let val=v;if(numeric)val=numOnly(val);onChange(val);};
   return(<div style={{width:"100%"}}><label style={labelCSS}>{label}</label><input value={value} onChange={e=>handle(e.target.value)} placeholder={placeholder||""} inputMode={numeric?"numeric":undefined} style={{...inputCSS,borderColor:error?"#c0392b":C.border}} onFocus={e=>e.target.style.borderColor=C.purple} onBlur={e=>e.target.style.borderColor=error?"#c0392b":C.border}/>{hint&&!error&&<div style={hintCSS}>{hint}</div>}{error&&<div style={errCSS}>{error}</div>}</div>);
 }
-
 function Select({label,value,onChange,options,placeholder,error}){
   return(<div style={{width:"100%"}}><label style={labelCSS}>{label}</label><select value={value} onChange={e=>onChange(e.target.value)} style={{...selectCSS,borderColor:error?"#c0392b":C.border}}><option value="">{placeholder||"Seleccionar..."}</option>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>{error&&<div style={errCSS}>{error}</div>}</div>);
 }
-
 function Row({children,cols=2}){return(<div style={{display:"grid",gridTemplateColumns:`repeat(auto-fit,minmax(${cols>2?120:200}px,1fr))`,gap:16,marginBottom:18}}>{children}</div>);}
-
 function StepIndicator({current}){return(<div style={{display:"flex",gap:4,marginBottom:28,justifyContent:"center",flexWrap:"wrap",padding:"0 8px"}}>{steps.map((s,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:30,height:30,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0,background:i===current?C.purple:i<current?C.green:"#e5e5e5",color:i<=current?"#fff":"#999",transition:"all 0.3s"}}>{i<current?"✓":i+1}</div>{i<steps.length-1&&<div style={{width:16,height:1.5,background:i<current?C.green:"#e5e5e5",borderRadius:1}}/>}</div>))}</div>);}
 
 function ContractPrint({d,printRef}){
@@ -54,11 +55,9 @@ function ContractPrint({d,printRef}){
   const TH={fontSize:9,fontWeight:700,padding:"5px 8px",background:"#f5f5f5",border:"0.5px solid #ccc",textAlign:"left"};
   const TD={fontSize:9,padding:"5px 8px",border:"0.5px solid #ccc",minHeight:22};
 
-  const logoHeader=<div style={{position:"absolute",top:0,right:0,width:60}}><img src={LOGO_B64} alt="Mobi" style={{width:"100%",opacity:0.85}}/></div>;
-
   return(<div ref={printRef} style={S}>
 <style>{`@media print{body{margin:0;padding:0}.no-print{display:none!important}@page{margin:2.5cm 2.5cm;size:letter}}`}</style>
-{logoHeader}
+<div style={{position:"absolute",top:0,right:0,width:60}}><img src={LOGO_B64} alt="Mobi" style={{width:"100%",opacity:0.85}}/></div>
 <h2 style={{fontSize:13,fontWeight:700,textAlign:"center",margin:"0 0 4px",paddingRight:70}}>CONTRATO DE COLABORACIÓN COMERCIAL CON COMODATO DE EQUIPOS</h2>
 <p style={{fontSize:10,textAlign:"center",color:"#444",marginBottom:12}}>Celebrado entre <b>MOBI CHARGE S.A.S.</b>, con NIT 901657651-3, y <b>{fmtName(al.empresa)}</b>, con NIT {blank(al.nit,120)}</p>
 <hr style={{border:"none",borderTop:"0.5px solid #ccc",margin:"12px 0"}}/>
@@ -73,7 +72,7 @@ function ContractPrint({d,printRef}){
 <td style={TD}>Correo: davidcamilo@mobicharge.org<br/>WhatsApp: 317 425 5361</td>
 <td style={TD}>Correo: {blank(ch.correo)}<br/>WhatsApp: {blank(ch.whatsapp)}</td>
 </tr></tbody></table>
-<p style={{fontSize:8,color:"#666",fontStyle:"italic",marginBottom:12}}>Las notificaciones enviadas a los canales anteriores se tendrán por válidamente realizadas para todos los efectos del presente contrato.</p>
+<p style={{fontSize:8,color:"#666",fontStyle:"italic",marginBottom:12}}>Las notificaciones enviadas a los canales anteriores se tendrán por válidamente realizadas para todos los efectos del presente contrato. Cualquier cambio en los datos de contacto deberá notificarse por escrito a la contraparte con un mínimo de cinco (5) días hábiles de anticipación.</p>
 <hr style={{border:"none",borderTop:"0.5px solid #ccc",margin:"8px 0 12px"}}/>
 
 <p style={P}>Entre los suscritos, el señor <b>DAVID CAMILO BAQUERO GÓMEZ</b>, mayor de edad, identificado con cédula de ciudadanía n.° 1.000.180.024 de Cota, quien actúa como representante legal de <b>MOBI CHARGE S.A.S.</b>, identificada con NIT 901657651-3, denominada en adelante <b>LA PARTE COMODANTE</b> o <b>MOBI CHARGE</b>; y, por la otra parte, <b>{fmtName(al.empresa)}</b>, identificada con NIT {blank(al.nit,120)}, representada por <b>{fmtName(al.rep)}</b>, identificado(a) con cédula de ciudadanía n.° {fmtCC2(al.cc)} de {blank(capitalize(al.ccExp),100)}, denominado(a) en adelante <b>EL ALIADO</b>; hemos acordado celebrar el presente <b>CONTRATO DE COLABORACIÓN COMERCIAL CON COMODATO DE EQUIPOS</b>, el cual es de naturaleza mixta y atípica, regido principalmente por lo pactado entre las partes y, en lo no previsto, por las disposiciones aplicables del Código Civil y el Código de Comercio colombianos, conforme a las siguientes cláusulas:</p>
@@ -104,17 +103,28 @@ function ContractPrint({d,printRef}){
 
 <p style={H}>CLÁUSULA OCTAVA. OBLIGACIONES ESPECÍFICAS DE LA PARTE COMODANTE</p>
 <p style={P}>Constituyen obligaciones de MOBI CHARGE S.A.S.:</p>
-{["1. Proveer, a título de comodato y sin costo para EL ALIADO, los equipos, habladores y baterías externas acordados.","2. Realizar la instalación y la conexión en línea de los equipos en el(los) punto(s) acordado(s).","3. No exigir ningún tipo de pago a EL ALIADO por el uso de la(s) estación(es).","4. Sustituir, sin costo para EL ALIADO, la(s) estación(es) y/o los dispositivos entregados en comodato que presenten desperfectos en su operatividad o funcionamiento.","5. Verificar el correcto funcionamiento de la(s) estación(es) y de las baterías portátiles antes de su entrega a EL ALIADO.","6. Brindar apoyo a EL ALIADO para el mantenimiento, la implementación y el cambio de la(s) estación(es), mediante indicaciones a través de los canales de comunicación acordados y, cuando sea necesario, con presencia física de un asesor o técnico de MOBI CHARGE S.A.S.","7. Retirar las estaciones y/o baterías entregadas en comodato, a solicitud de EL ALIADO, al término del contrato o de sus prórrogas."].map((t,i)=><p key={i} style={IX}>{t}</p>)}
+<p style={IX}>1. Proveer, a título de comodato y sin costo para EL ALIADO, los equipos, habladores y baterías externas acordados.</p>
+<p style={IX}>2. Realizar la instalación y la conexión en línea de los equipos en el(los) punto(s) acordado(s).</p>
+<p style={IX}>3. No exigir ningún tipo de pago a EL ALIADO por el uso de la(s) estación(es).</p>
+<p style={IX}>4. Sustituir, sin costo para EL ALIADO, la(s) estación(es) y/o los dispositivos entregados en comodato que presenten desperfectos en su operatividad o funcionamiento.</p>
+<p style={IX}>5. Verificar el correcto funcionamiento de la(s) estación(es) y de las baterías portátiles antes de su entrega a EL ALIADO.</p>
+<p style={IX}>6. Brindar apoyo a EL ALIADO para el mantenimiento, la implementación y el cambio de la(s) estación(es), mediante indicaciones a través de los canales de comunicación acordados y, cuando sea necesario, con presencia física de un asesor o técnico de MOBI CHARGE S.A.S.</p>
+<p style={IX}>7. Retirar las estaciones y/o baterías entregadas en comodato, a solicitud de EL ALIADO, al término del contrato o de sus prórrogas.</p>
 
 <p style={H}>CLÁUSULA NOVENA. OBLIGACIONES ESPECÍFICAS DE EL ALIADO</p>
 <p style={P}>Constituyen obligaciones de EL ALIADO:</p>
-{["1. Proveer a MOBI CHARGE S.A.S. un lugar adecuado e idóneo para ubicar la(s) estación(es), con alta visibilidad y accesibilidad para los clientes. Cualquier modificación en el posicionamiento requerirá notificación formal a MOBI CHARGE S.A.S. y su aprobación expresa.","2. Mantener la(s) estación(es) con suministro eléctrico durante las horas y días normales de operación del establecimiento, salvo en casos de fuerza mayor o corte de energía. EL ALIADO asumirá el costo del consumo eléctrico correspondiente.","3. Asegurar que la(s) estación(es) se mantengan limpias, conforme al manual de uso y mantenimiento suministrado por MOBI CHARGE S.A.S.","4. Colaborar con MOBI CHARGE S.A.S. en la operación básica y el mantenimiento de la(s) estación(es), en particular: garantizar que el equipo permanezca encendido y conectado a su toma eléctrica, verificar su funcionamiento y realizar limpieza básica según el manual entregado.","5. Adoptar medidas preventivas ante cualquier actividad sospechosa o mal uso alrededor de la(s) estación(es), informar de inmediato a las autoridades y notificar a MOBI CHARGE S.A.S. con la mayor brevedad posible a través de los canales establecidos en la Cláusula Cuarta.","6. Permitir el ingreso de representantes de MOBI CHARGE S.A.S. al establecimiento para realizar revisiones, inspecciones o recolección de evidencia relacionadas con la(s) estación(es)."].map((t,i)=><p key={i} style={IX}>{t}</p>)}
-
-<p style={IX}><b>7. Responsabilidad por pérdida o daño — Cláusula Penal:</b> EL ALIADO está obligado a asegurar que la(s) estación(es) no se pierdan ni dañen. En caso de pérdida total o daño irreparable de algún equipo, la responsabilidad económica se distribuirá en partes iguales entre EL ALIADO y MOBI CHARGE S.A.S., correspondiéndole a cada parte el <b>cincuenta por ciento (50%)</b> del valor de reposición del equipo en el mercado a la fecha del siniestro. La parte correspondiente a EL ALIADO deberá pagarse dentro de los <b>diez (10) días hábiles</b> siguientes a la ocurrencia del hecho, tomando como referencia los valores consignados en la tabla siguiente, actualizados con el IPC acumulado desde la firma del contrato. En caso de daño parcial reparable, EL ALIADO responderá por el cien por ciento (100%) de los costos de reparación:</p>
+<p style={IX}>1. Proveer a MOBI CHARGE S.A.S. un lugar adecuado e idóneo para ubicar la(s) estación(es), con alta visibilidad y accesibilidad para los clientes. Cualquier modificación en el posicionamiento requerirá notificación formal a MOBI CHARGE S.A.S. y su aprobación expresa.</p>
+<p style={IX}>2. Mantener la(s) estación(es) con suministro eléctrico durante las horas y días normales de operación del establecimiento, salvo en casos de fuerza mayor o corte de energía. EL ALIADO asumirá el costo del consumo eléctrico correspondiente.</p>
+<p style={IX}>3. Asegurar que la(s) estación(es) se mantengan limpias, conforme al manual de uso y mantenimiento suministrado por MOBI CHARGE S.A.S.</p>
+<p style={IX}>4. Colaborar con MOBI CHARGE S.A.S. en la operación básica y el mantenimiento de la(s) estación(es), en particular: garantizar que el equipo permanezca encendido y conectado a su toma eléctrica, verificar su funcionamiento y realizar limpieza básica según el manual entregado. Las tareas que requieran conocimientos técnicos previos serán atendidas por MOBI CHARGE S.A.S.</p>
+<p style={IX}>5. Adoptar medidas preventivas ante cualquier actividad sospechosa o mal uso alrededor de la(s) estación(es), informar de inmediato a las autoridades y notificar a MOBI CHARGE S.A.S. con la mayor brevedad posible a través de los canales establecidos en la Cláusula Cuarta. En caso de pérdida del equipo, EL ALIADO deberá notificarlo a MOBI CHARGE S.A.S. y radicar la denuncia policial correspondiente de manera simultánea.</p>
+<p style={IX}>6. Permitir el ingreso de representantes de MOBI CHARGE S.A.S. al establecimiento para realizar revisiones, inspecciones o recolección de evidencia relacionadas con la(s) estación(es).</p>
+<p style={IX}><b>7. Responsabilidad por pérdida o daño — Cláusula Penal:</b> EL ALIADO está obligado a asegurar que la(s) estación(es) no se pierdan ni dañen. En caso de pérdida total o daño irreparable de algún equipo, la responsabilidad económica se distribuirá en partes iguales entre EL ALIADO y MOBI CHARGE S.A.S., correspondiéndole a cada parte el <b>cincuenta por ciento (50%)</b> del valor de reposición del equipo en el mercado a la fecha del siniestro. La parte correspondiente a EL ALIADO deberá pagarse dentro de los <b>diez (10) días hábiles</b> siguientes a la ocurrencia del hecho, tomando como referencia los valores consignados en la tabla siguiente, actualizados con el IPC acumulado desde la firma del contrato. En caso de daño parcial reparable, EL ALIADO responderá por el cien por ciento (100%) de los costos de reparación. Este pago no excluye la indemnización de perjuicios adicionales que MOBI CHARGE S.A.S. pueda acreditar:</p>
 
 <table style={{width:"90%",borderCollapse:"collapse",margin:"8px 0 12px 16px",border:"0.5px solid #ccc"}}><thead><tr><th style={{...TH,width:"45%"}}>Tipo de equipo</th><th style={TH}>Cant.</th><th style={TH}>Valor unit. (USD)</th><th style={TH}>Valor total (USD)</th></tr></thead><tbody>{eq.filter(r=>r.tipo).map((r,i)=>(<tr key={i}><td style={{...TD,minWidth:160}}>{r.tipo}</td><td style={TD}>{r.cant}</td><td style={TD}>{r.unitario?`USD $${r.unitario}`:""}</td><td style={TD}>{r.total?`USD $${r.total}`:""}</td></tr>))}</tbody></table>
 
-{["8. Designar un representante responsable de la relación con MOBI CHARGE S.A.S., con facultad de decisión para aprobar y ejecutar lo establecido en esta cláusula.","9. Los ajustes decididos por MOBI CHARGE S.A.S. tomarán efecto en la fecha en que la notificación sea enviada a EL ALIADO y, cuando sea necesaria su aprobación, en la fecha en que esta se otorgue. El incumplimiento de los tiempos acordados para implementar dichos ajustes generará a cargo de EL ALIADO una penalidad equivalente al valor monetario promedio diario de los costos o pérdidas de beneficios causados a MOBI CHARGE S.A.S. por cada día adicional de incumplimiento."].map((t,i)=><p key={i} style={IX}>{t}</p>)}
+<p style={IX}>8. Designar un representante responsable de la relación con MOBI CHARGE S.A.S., con facultad de decisión para aprobar y ejecutar lo establecido en esta cláusula.</p>
+<p style={IX}>9. Los ajustes decididos por MOBI CHARGE S.A.S. tomarán efecto en la fecha en que la notificación sea enviada a EL ALIADO y, cuando sea necesaria su aprobación, en la fecha en que esta se otorgue. El incumplimiento de los tiempos acordados para implementar dichos ajustes generará a cargo de EL ALIADO una penalidad equivalente al valor monetario promedio diario de los costos o pérdidas de beneficios causados a MOBI CHARGE S.A.S. por cada día adicional de incumplimiento.</p>
 
 <p style={H}>CLÁUSULA DÉCIMA. CESIÓN DEL CONTRATO</p>
 <p style={P}>EL ALIADO no podrá ceder el presente contrato sin autorización previa, expresa y escrita de LA PARTE COMODANTE. Igualmente, EL ALIADO no podrá ceder, total ni parcialmente, la(s) estación(es) objeto del presente contrato sin dicho consentimiento.</p>
@@ -125,47 +135,58 @@ function ContractPrint({d,printRef}){
 <p style={P}>Los valores adeudados por cualquiera de las partes que no sean cancelados en las fechas pactadas causarán intereses de mora a la tasa del <b>diez por ciento (10%) efectivo anual (e.a.)</b>, calculados desde el día siguiente al vencimiento del plazo hasta la fecha de pago efectivo.</p>
 <p style={P}>Si EL ALIADO incumple cualquier obligación a su cargo, deberá pagar a MOBI CHARGE S.A.S. la suma de las pérdidas o costos asociados al incumplimiento, sin que dicho pago lo exima de la obligación de responder por el valor de reposición de la(s) estación(es) en caso de pérdida total, o de los costos de reparación necesarios para restituirla(s) al estado en que fue(ron) entregada(s).</p>
 <p style={P}>A la cuenta bancaria indicada a continuación se realizarán todas las transferencias de comisiones y demás pagos a favor de EL ALIADO derivados del presente contrato:</p>
-<p style={{...P,paddingLeft:16}}>Nombre del banco: {blank(ba.banco)}<br/>Propietario de la cuenta: {blank(ba.prop)}<br/>Identificación del titular: {blank(ba.id)}<br/>Tipo de cuenta: {blank(ba.tipo)}<br/>N.° de cuenta: {blank(ba.num)}<br/>Número telefónico asociado: {blank(ba.tel)}<br/>Correo asociado: {blank(ba.correo)}</p>
+<p style={{...P,paddingLeft:16}}>Nombre del banco: {blank(ba.banco)}<br/>Propietario de la cuenta: {blank(ba.prop)}<br/>Identificación del titular: {blank(ba.id)}<br/>Tipo de cuenta: {blank(ba.tipo)}<br/>N.° de cuenta: {blank(ba.num)}</p>
 
 <p style={H}>CLÁUSULA DUODÉCIMA. TERMINACIÓN ANTICIPADA POR CAUSALES ESPECÍFICAS</p>
-<p style={P}>EL ALIADO y MOBI CHARGE S.A.S., de manera conjunta o unilateral, podrán dar por terminado el presente contrato de forma anticipada si ocurre alguna de las siguientes situaciones: a) disolución de MOBI CHARGE S.A.S.; b) necesidad imprevista y urgente de la(s) estación(es) por parte de MOBI CHARGE S.A.S.; c) incumplimiento de las obligaciones pactadas en el presente acuerdo; d) resultados inferiores a las metas acordadas entre las partes, las cuales deberán quedar definidas en el Anexo de Metas suscrito al momento de la instalación, con indicadores objetivos y medibles.</p>
+<p style={P}>EL ALIADO y MOBI CHARGE S.A.S., de manera conjunta o unilateral, podrán dar por terminado el presente contrato de forma anticipada si ocurre alguna de las siguientes situaciones: a) disolución de MOBI CHARGE S.A.S.; b) necesidad imprevista y urgente de la(s) estación(es) por parte de MOBI CHARGE S.A.S., entendida como cualquier situación que pueda generar pérdidas monetarias para la compañía; c) incumplimiento de las obligaciones pactadas en el presente acuerdo; d) resultados inferiores a las metas acordadas entre las partes, las cuales deberán quedar definidas en el Anexo de Metas suscrito al momento de la instalación, con indicadores objetivos y medibles.</p>
 
 <p style={H}>CLÁUSULA DECIMOTERCERA. RESTITUCIÓN DE EQUIPOS</p>
-<p style={P}>Vencido o terminado el contrato por cualquier causa, EL ALIADO deberá permitir el retiro de la(s) estación(es) dentro de los <b>cinco (5) días hábiles</b> siguientes a la notificación de terminación. Si transcurrido dicho plazo EL ALIADO impide o dificulta el retiro, MOBI CHARGE S.A.S. quedará facultada para iniciar la acción de restitución de bien mueble ante la autoridad competente, sin perjuicio de cobrar a EL ALIADO una penalidad diaria equivalente al cero punto cinco por ciento (0,5%) del valor del equipo retenido por cada día de retención injustificada.</p>
+<p style={P}>Vencido o terminado el contrato por cualquier causa, EL ALIADO deberá permitir el retiro de la(s) estación(es) dentro de los <b>cinco (5) días hábiles</b> siguientes a la notificación de terminación. Si transcurrido dicho plazo EL ALIADO impide o dificulta el retiro, MOBI CHARGE S.A.S. quedará facultada para iniciar la acción de restitución de bien mueble ante la autoridad competente, sin perjuicio de cobrar a EL ALIADO una penalidad diaria equivalente al cero punto cinco por ciento (0,5%) del valor del equipo retenido por cada día de retención injustificada, contado desde el vencimiento del plazo anterior.</p>
 
 <p style={H}>CLÁUSULA DECIMOCUARTA. PUBLICIDAD DIGITAL EN PANTALLAS (DOOH)</p>
 <p style={P}>MOBI CHARGE S.A.S. tendrá derecho exclusivo a comercializar el espacio publicitario de las pantallas integradas en las estaciones instaladas en el(los) establecimiento(s) de EL ALIADO. Los ingresos derivados de dicha publicidad digital pertenecen en su totalidad a MOBI CHARGE S.A.S., sin que EL ALIADO pueda exigir participación económica adicional a la comisión establecida en la Cláusula Segunda.</p>
-<p style={P}>Como reconocimiento a la presencia de las pantallas en su establecimiento, MOBI CHARGE S.A.S. asignará a EL ALIADO el <b>diez por ciento (10%)</b> del tiempo de pauta disponible en las pantallas ubicadas en su(s) establecimiento(s), para que EL ALIADO lo destine a contenido propio o comercial de su elección.</p>
-<p style={P}>Los anunciantes gestionados por MOBI CHARGE S.A.S. deberán alinearse con las políticas comerciales, de imagen y de convivencia de EL ALIADO. MOBI CHARGE S.A.S. se compromete a no pautar contenido que represente competencia directa para el negocio principal de EL ALIADO. Ante cualquier objeción fundamentada, MOBI CHARGE S.A.S. retirará o reemplazará dicho contenido en un plazo no mayor a <b>cinco (5) días hábiles</b>.</p>
+<p style={P}>Como reconocimiento a la presencia de las pantallas en su establecimiento, MOBI CHARGE S.A.S. asignará a EL ALIADO el <b>diez por ciento (10%)</b> del tiempo de pauta disponible en las pantallas ubicadas en su(s) establecimiento(s), para que EL ALIADO lo destine a contenido propio o comercial de su elección. Este tiempo será coordinado entre las partes mediante los canales establecidos en la Cláusula Cuarta, y no podrá acumularse ni transferirse a terceros.</p>
+<p style={P}>Los anunciantes gestionados por MOBI CHARGE S.A.S. deberán alinearse con las políticas comerciales, de imagen y de convivencia de EL ALIADO, comunicadas previamente por escrito. MOBI CHARGE S.A.S. se compromete a no pautar contenido que represente competencia directa para el negocio principal de EL ALIADO, que contravenga sus valores institucionales o que genere un conflicto de interés evidente con su actividad comercial. Ante cualquier objeción fundamentada de EL ALIADO sobre un anunciante específico, MOBI CHARGE S.A.S. evaluará el caso y, de confirmarse el conflicto, retirará o reemplazará dicho contenido en un plazo no mayor a <b>cinco (5) días hábiles</b>.</p>
 
 <p style={H}>CLÁUSULA DECIMOQUINTA. RESPONSABILIDAD E INDEMNIDAD</p>
-<p style={P}><b>Sección 15.01</b> Las partes serán responsables de los daños o perjuicios que causen a la otra parte en el marco de sus obligaciones derivadas del presente contrato.</p>
-<p style={P}><b>Sección 15.02</b> MOBI CHARGE S.A.S. es la única responsable del uso de los cargadores portátiles y de la plataforma tecnológica (app). El usuario es y seguirá siendo el único propietario de todos sus datos. EL ALIADO tratará los datos facilitados por MOBI CHARGE S.A.S. como confidenciales.</p>
-<p style={P}><b>Sección 15.03</b> EL ALIADO no será responsable de daños causados a los usuarios por: (i) fuerza mayor; (ii) pérdida de beneficios esperados; (iii) indisponibilidad de la plataforma; (iv) mantenimiento; (v) incumplimiento de MOBI CHARGE; (vi) fallas eléctricas o de software; (vii) virus; (viii) uso inadecuado por usuarios.</p>
-<p style={P}><b>Sección 15.04</b> MOBI CHARGE S.A.S. se compromete a mantener indemne a EL ALIADO frente a cualquier pérdida o reclamación derivada del incumplimiento de este contrato o de la ley aplicable.</p>
+<p style={P}><b>Sección 15.01 Responsabilidad general.</b> Las partes serán responsables de los daños o perjuicios que causen a la otra parte en el marco de sus obligaciones derivadas del presente contrato.</p>
+<p style={P}><b>Sección 15.02 Responsabilidad de LA PARTE COMODANTE.</b> MOBI CHARGE S.A.S. es la única responsable del uso de los cargadores portátiles y de la plataforma tecnológica (app), así como de la introducción de datos, documentos, texto, audio, video, imágenes y otros contenidos cargados por los usuarios. El usuario es y seguirá siendo el único propietario de todos sus datos; no obstante, con la firma de este contrato faculta a MOBI CHARGE S.A.S. para utilizarlos en la prestación del servicio. EL ALIADO tratará los datos facilitados por MOBI CHARGE S.A.S. como confidenciales y solo los comunicará a sus empleados, entidades afiliadas, contratistas y proveedores para efectos exclusivos de la prestación del servicio.</p>
+<p style={P}>Mediante la suscripción de este contrato, EL ALIADO acepta y autoriza a MOBI CHARGE S.A.S. para compilar información estadística relacionada con el rendimiento del servicio, en la medida en que dicha información no identifique de forma explícita a personas naturales, conforme a la Ley 1581 de 2012.</p>
+<p style={P}><b>Parágrafo.</b> MOBI CHARGE S.A.S. se reserva el derecho de almacenar y realizar copias de seguridad de la información recolectada a través de la plataforma tecnológica.</p>
+<p style={P}><b>Sección 15.03 Exclusión de responsabilidad.</b> EL ALIADO no será responsable de daños o perjuicios causados a los usuarios cuando ocurra alguno de los siguientes eventos: (i) fuerza mayor o caso fortuito; (ii) pérdida de beneficios esperados por el cliente con el uso de la plataforma; (iii) indisponibilidad de la plataforma por causas fuera de los niveles de servicio acordados; (iv) suspensión del servicio por mantenimiento correctivo o preventivo; (v) daño a terceros por incumplimiento de limitaciones de uso por parte de MOBI CHARGE S.A.S. o sus autorizados; (vi) modificaciones urgentes necesarias por causas ajenas a la voluntad de EL ALIADO, incluyendo fallas eléctricas, atmosféricas o de software; (vii) virus importados a través de la red; (viii) uso inadecuado de la plataforma por parte de los usuarios.</p>
+<p style={P}><b>Sección 15.04 Indemnidad.</b> MOBI CHARGE S.A.S. se compromete a mantener indemne a EL ALIADO, y a sus accionistas, socios, directivos y gerentes, frente a cualquier pérdida o reclamación que surja de: (i) incumplimiento de este contrato por parte de MOBI CHARGE S.A.S.; (ii) violación de la ley aplicable por parte de MOBI CHARGE S.A.S.; (iii) reclamaciones relativas a daños causados por el uso de la plataforma tecnológica; (iv) violación de los derechos de EL ALIADO por parte de MOBI CHARGE S.A.S.; (v) cualquier reclamación, daño, pérdida u honorarios legales relacionados con el incumplimiento de este contrato o actos u omisiones de MOBI CHARGE S.A.S.</p>
 
 <p style={H}>CLÁUSULA DECIMOSEXTA. AUTORIZACIÓN PARA RECOLECCIÓN Y TRATAMIENTO DE DATOS PERSONALES</p>
-<p style={P}>De conformidad con la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás normas concordantes, las partes manifiestan contar con políticas de tratamiento de datos personales publicadas en www.mobicharge.org. MOBI CHARGE S.A.S. es responsable del tratamiento de los datos de usuarios finales. EL ALIADO no tendrá acceso a dichos datos salvo autorización expresa y escrita.</p>
+<p style={P}>Con el propósito de dar un adecuado tratamiento a los datos personales de EL ALIADO, de conformidad con el régimen general de protección de datos reglamentado por la Constitución Política Nacional, la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás normas concordantes, las partes manifiestan contar con políticas de tratamiento de datos personales, publicadas en www.mobicharge.org. En consecuencia, las partes aceptan la forma en que se hará uso de sus datos personales presentes y futuros.</p>
+<p style={P}>MOBI CHARGE S.A.S. es responsable del tratamiento de los datos personales de los usuarios finales que interactúan con la app y los equipos. EL ALIADO no tendrá acceso ni uso sobre dichos datos, salvo autorización expresa y escrita de MOBI CHARGE S.A.S.</p>
 
-<p style={H}>CLÁUSULA DECIMOSÉPTIMA. CONFIDENCIALIDAD</p>
-<p style={P}>Toda la información intercambiada tiene carácter reservado. La violación constituye falta grave y causal de terminación con justa causa, con cláusula penal de <b>VEINTE (20) SMLMV</b>.</p>
+<p style={H}>CLÁUSULA DECIMOSÉPTIMA. CONFIDENCIALIDAD — RESERVA DE LA INFORMACIÓN</p>
+<p style={P}>Toda la información que las partes intercambien en desarrollo del presente contrato tiene carácter reservado. Las partes se comprometen a guardar estricta reserva sobre dicha información y a no divulgarla a terceros ni utilizarla para propósitos distintos del cumplimiento del objeto contractual.</p>
+<p style={P}><b>Parágrafo primero.</b> Se considera confidencial, de manera enunciativa y no taxativa, la siguiente información de MOBI CHARGE S.A.S.: estados financieros, declaraciones de renta, balances, software, patentes, diseños industriales, propuestas comerciales, informes estadísticos o de ventas, manuales de funciones y procedimientos, contratos, actas de socios y junta directiva, información de productos, bases de datos y cualquier otro documento sensible para el giro ordinario del negocio.</p>
+<p style={P}><b>Parágrafo segundo.</b> Son objeto especial de este acuerdo las técnicas de producción y mercadeo de los productos de MOBI CHARGE S.A.S., así como el know-how de la compañía, en cualquier medio.</p>
+<p style={P}><b>Parágrafo tercero.</b> La violación de este acuerdo de confidencialidad será considerada falta grave y causal de terminación del contrato con justa causa imputable a EL ALIADO. En dicho caso, sin perjuicio de las acciones legales correspondientes, EL ALIADO deberá pagar a MOBI CHARGE S.A.S. una cláusula penal equivalente a <b>VEINTE (20) salarios mínimos legales mensuales vigentes (SMLMV)</b> a título de indemnización por daños y perjuicios.</p>
 
 <p style={H}>CLÁUSULA DECIMOCTAVA. PROPIEDAD INTELECTUAL</p>
-<p style={P}>El presente contrato no transfiere a EL ALIADO ningún derecho de propiedad intelectual sobre las estaciones, el software, la plataforma ni la marca MOBI CHARGE. Las mejoras o sugerencias sobre los equipos se entenderán cedidas a MOBI CHARGE S.A.S. a título gratuito, limitado estrictamente al servicio objeto de este contrato.</p>
+<p style={P}>El objeto del presente contrato no transfiere a EL ALIADO ningún derecho de propiedad intelectual sobre las estaciones, las baterías, el software, la plataforma tecnológica, la marca MOBI CHARGE ni ningún otro activo intangible de MOBI CHARGE S.A.S. EL ALIADO reconoce que dichos derechos pertenecen exclusivamente a MOBI CHARGE S.A.S. y se obliga a no reproducirlos, modificarlos ni explotarlos de ninguna forma.</p>
+<p style={P}>En caso de que EL ALIADO, con ocasión de la ejecución del presente contrato, realice mejoras, adaptaciones o sugerencias concretas sobre el funcionamiento de las estaciones o el servicio prestado a través de ellas, dichas contribuciones se entenderán cedidas a MOBI CHARGE S.A.S. a título gratuito, sin que ello genere obligación adicional alguna para MOBI CHARGE S.A.S. ni derecho patrimonial para EL ALIADO. Esta cesión se limita estrictamente a mejoras sobre los equipos y el servicio objeto de este contrato, y no se extiende a la actividad comercial propia del establecimiento de EL ALIADO.</p>
 
 <p style={H}>CLÁUSULA DECIMONOVENA. ÉTICA Y TRANSPARENCIA</p>
-<p style={P}>Las partes declaran su compromiso contra la corrupción y el soborno. El incumplimiento constituye falta grave y faculta a la parte afectada para dar por terminado el contrato.</p>
+<p style={P}>EL ALIADO se obliga a conocer, entender y cumplir los controles, políticas y código de ética establecidos por MOBI CHARGE S.A.S. en materia de seguridad y protección de la información. En particular, EL ALIADO tendrá las siguientes prohibiciones: a) instalar en los equipos de cómputo asignados por MOBI CHARGE S.A.S. o de sus clientes programas no institucionales o sin licencia; b) modificar el software instalado por MOBI CHARGE S.A.S. salvo autorización expresa; c) desarrollar sistemas o programas no autorizados; d) interferir transmisiones de voz, datos u otro tipo sin propósito legítimo; e) monitorear comunicaciones sin autorización; f) utilizar información confidencial para beneficio propio o de terceros.</p>
+<p style={P}>Las partes declaran su compromiso en la lucha contra la corrupción y el soborno, y se obligan a abstenerse de ofrecer, dar o prometer dádivas, sumas de dinero o cualquier beneficio a servidores públicos o particulares con el fin de obtener ventajas indebidas. El incumplimiento de esta cláusula constituye falta grave y faculta a la parte afectada para dar por terminado el contrato, siendo la parte incumplida responsable de todos los perjuicios causados.</p>
 
 <p style={H}>CLÁUSULA VIGÉSIMA. PREVENCIÓN DE RIESGOS LA/FT Y CORRUPCIÓN</p>
-<p style={P}>EL ALIADO declara bajo juramento la licitud de su patrimonio y se compromete a cumplir el Manual de SARLAFT de MOBI CHARGE S.A.S. MOBI CHARGE podrá terminar unilateralmente sin indemnización cuando EL ALIADO sea condenado, sancionado o investigado por delitos de lavado de activos, financiación del terrorismo o corrupción.</p>
+<p style={P}>EL ALIADO declara bajo la gravedad de juramento que el origen de su patrimonio y las actividades propias de su oficio son de legítima y lícita procedencia, y se compromete a no realizar actividades vinculadas con lavado de activos o financiación del terrorismo. EL ALIADO declara conocer y aceptar el Manual de SARLAFT de MOBI CHARGE S.A.S. y se obliga a cumplir todas las políticas en materia de prevención y control de lavado de activos y financiación del terrorismo.</p>
+<p style={P}>MOBI CHARGE S.A.S. podrá dar por terminada unilateralmente la relación comercial, sin lugar al pago de indemnización, cuando EL ALIADO sea: a) condenado por delitos relacionados con lavado de activos, delitos fuente o financiación del terrorismo; b) sancionado administrativamente por violaciones a normas anticorrupción; c) incluido en listas de control nacional o internacional de lavado de activos o financiación del terrorismo; d) vinculado a investigaciones judiciales, administrativas, disciplinarias o fiscales por dichas conductas.</p>
+<p style={P}><b>Parágrafo.</b> En caso de hurtos, fraudes o cualquier acto que atente contra los intereses de MOBI CHARGE S.A.S., EL ALIADO autoriza la realización de las investigaciones correspondientes, sin que ello constituya vulneración de su derecho a la privacidad o intimidad.</p>
 
 <p style={H}>CLÁUSULA VIGÉSIMA PRIMERA. SOLUCIÓN DE CONTROVERSIAS</p>
-<p style={P}>Las diferencias serán resueltas mediante conciliación extrajudicial. Si fracasa dentro de treinta (30) días hábiles, se resolverán mediante arbitramento ante la Cámara de Comercio de Bogotá, con un (1) árbitro, en derecho.</p>
+<p style={P}>Las diferencias que surjan entre las partes con ocasión del presente contrato serán resueltas, en primera instancia, mediante conciliación extrajudicial ante un centro de conciliación debidamente autorizado. Si la conciliación fracasa o las partes no llegan a un acuerdo dentro de los treinta (30) días hábiles siguientes a la presentación de la solicitud, las controversias serán resueltas mediante arbitramento ante el Centro de Arbitraje y Conciliación de la Cámara de Comercio de Bogotá, conforme a su reglamento, mediante un (1) árbitro, con fallo en derecho.</p>
 
 <p style={H}>CLÁUSULA VIGÉSIMA SEGUNDA. INTEGRACIÓN Y MODIFICACIONES</p>
-<p style={P}>Este contrato reemplaza todo acuerdo anterior. Las modificaciones se formalizarán mediante otrosí. Los derechos son intransferibles salvo autorización expresa y escrita.</p>
+<p style={P}>El presente contrato reemplaza y deja sin efecto cualquier otro contrato escrito o verbal, así como cualquier acuerdo suscrito o convenido entre las partes con anterioridad. En consecuencia, este es el único texto contractual aplicable entre las partes. Las modificaciones que se acuerden se formalizarán mediante otrosí suscrito por ambas partes.</p>
+<p style={P}>Los derechos sobre este contrato son intransferibles, en atención a la naturaleza intuitu personae del mismo. Solo podrán transferirse con autorización expresa y escrita de ambas partes.</p>
 
-<p style={{...P,marginTop:16}}>Se suscribe en la ciudad de Bogotá D.C., en dos ejemplares del mismo tenor y valor, a los {blank(fi.dia,30)} días del mes de {blank(fi.mes,80)} del año {blank(fi.anio,40)}.</p>
+<p style={{...P,marginTop:16}}>Se suscribe en la ciudad de Bogotá D.C., en dos ejemplares del mismo tenor y valor, con destino a cada una de las partes, a los {blank(fi.dia,30)} días del mes de {blank(fi.mes,80)} del año {blank(fi.anio,40)}.</p>
 
 <div style={{display:"flex",gap:40,marginTop:48}}>
 <div style={{flex:1}}><div style={{borderBottom:"1px solid #000",height:36}}/><p style={{fontSize:10,marginTop:4}}><b>Firma de EL ALIADO</b><br/>Nombre: {fmtName(al.rep)}<br/>Identificación: {fmtCC2(al.cc)}<br/>Fecha:</p></div>
@@ -189,52 +210,14 @@ export default function App(){
 
   const validate=(s)=>{
     const e={};const d=data;
-    if(s===0){
-      if(!d.aliado.empresa)e["aliado.empresa"]="Requerido";
-      if(!d.aliado.nit)e["aliado.nit"]="Requerido";
-      if(!d.aliado.dir)e["aliado.dir"]="Requerido";
-      if(!d.aliado.tel)e["aliado.tel"]="Requerido";
-      if(!d.aliado.rep)e["aliado.rep"]="Requerido";
-      if(!d.aliado.correo)e["aliado.correo"]="Requerido";
-      if(d.aliado.correo&&!d.aliado.correo.includes("@"))e["aliado.correo"]="Formato inválido";
-      if(!d.aliado.cc)e["aliado.cc"]="Requerido";
-      if(!d.aliado.ccExp)e["aliado.ccExp"]="Requerido";
-    }
-    if(s===1){
-      if(!d.canales.correo)e["canales.correo"]="Requerido";
-      if(d.canales.correo&&!d.canales.correo.includes("@"))e["canales.correo"]="Formato inválido";
-      if(!d.canales.whatsapp)e["canales.whatsapp"]="Requerido";
-      if(!d.duracion.diaI)e["duracion.diaI"]="Requerido";
-      if(!d.duracion.mesI)e["duracion.mesI"]="Requerido";
-      if(!d.duracion.anioI)e["duracion.anioI"]="Requerido";
-      if(!d.duracion.diaF)e["duracion.diaF"]="Requerido";
-      if(!d.duracion.mesF)e["duracion.mesF"]="Requerido";
-      if(!d.duracion.anioF)e["duracion.anioF"]="Requerido";
-    }
-    if(s===2){
-      if(!d.equipos.some(r=>r.tipo&&r.cant))e["equipos"]="Diligencia al menos una fila completa (tipo y cantidad)";
-    }
-    if(s===3){
-      if(!d.banco.banco)e["banco.banco"]="Requerido";
-      if(!d.banco.prop)e["banco.prop"]="Requerido";
-      if(!d.banco.id)e["banco.id"]="Requerido";
-      if(!d.banco.tipo)e["banco.tipo"]="Requerido";
-      if(!d.banco.num)e["banco.num"]="Requerido";
-      if(!d.banco.tel)e["banco.tel"]="Requerido";
-      if(!d.banco.correo)e["banco.correo"]="Requerido";
-      if(!d.firma.dia)e["firma.dia"]="Requerido";
-      if(!d.firma.mes)e["firma.mes"]="Requerido";
-      if(!d.firma.anio)e["firma.anio"]="Requerido";
-    }
+    if(s===0){if(!d.aliado.empresa)e["aliado.empresa"]="Requerido";if(!d.aliado.nit)e["aliado.nit"]="Requerido";if(!d.aliado.dir)e["aliado.dir"]="Requerido";if(!d.aliado.tel)e["aliado.tel"]="Requerido";if(!d.aliado.rep)e["aliado.rep"]="Requerido";if(!d.aliado.correo)e["aliado.correo"]="Requerido";if(d.aliado.correo&&!d.aliado.correo.includes("@"))e["aliado.correo"]="Formato inválido";if(!d.aliado.cc)e["aliado.cc"]="Requerido";if(!d.aliado.ccExp)e["aliado.ccExp"]="Requerido";}
+    if(s===1){if(!d.canales.correo)e["canales.correo"]="Requerido";if(d.canales.correo&&!d.canales.correo.includes("@"))e["canales.correo"]="Formato inválido";if(!d.canales.whatsapp)e["canales.whatsapp"]="Requerido";if(!d.duracion.diaI)e["duracion.diaI"]="Requerido";if(!d.duracion.mesI)e["duracion.mesI"]="Requerido";if(!d.duracion.anioI)e["duracion.anioI"]="Requerido";if(!d.duracion.diaF)e["duracion.diaF"]="Requerido";if(!d.duracion.mesF)e["duracion.mesF"]="Requerido";if(!d.duracion.anioF)e["duracion.anioF"]="Requerido";}
+    if(s===2){if(!d.equipos.some(r=>r.tipo&&r.cant))e["equipos"]="Diligencia al menos una fila completa (tipo y cantidad)";}
+    if(s===3){if(!d.banco.banco)e["banco.banco"]="Requerido";if(!d.banco.prop)e["banco.prop"]="Requerido";if(!d.banco.id)e["banco.id"]="Requerido";if(!d.banco.tipo)e["banco.tipo"]="Requerido";if(!d.banco.num)e["banco.num"]="Requerido";}
     return e;
   };
 
-  const next=()=>{
-    const e=validate(step);
-    setErrors(e);
-    setTried(p=>({...p,[step]:true}));
-    if(Object.keys(e).length===0)setStep(step+1);
-  };
+  const next=()=>{const e=validate(step);setErrors(e);setTried(p=>({...p,[step]:true}));if(Object.keys(e).length===0)setStep(step+1);};
   const er=k=>tried[step]?errors[k]:undefined;
 
   const handlePrint=()=>{const c=printRef.current;const w=window.open("","_blank","width=816,height=1056");w.document.write(`<!DOCTYPE html><html><head><title>Contrato Mobi Charge</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;padding:60px 72px;font-size:10px;line-height:1.65;color:#111}@page{margin:2.2cm 2.5cm;size:letter}table{page-break-inside:avoid}</style></head><body>${c.innerHTML}</body></html>`);w.document.close();setTimeout(()=>w.print(),500);};
@@ -256,8 +239,7 @@ export default function App(){
   const btnP={padding:"12px 28px",fontSize:14,border:"none",borderRadius:8,background:C.purple,color:C.white,cursor:"pointer",fontWeight:600,fontFamily:"inherit"};
   const btnS={padding:"12px 28px",fontSize:14,border:`1.5px solid ${C.border}`,borderRadius:8,background:C.white,cursor:"pointer",fontFamily:"inherit"};
   const btnG={padding:"12px 28px",fontSize:14,border:"none",borderRadius:8,background:C.green,color:C.dark,cursor:"pointer",fontWeight:600,fontFamily:"inherit"};
-
-  const eqInputCSS={width:"100%",padding:"9px 8px",border:`1.5px solid #eee`,borderRadius:6,fontSize:13,fontFamily:"inherit",background:"#fafafa",boxSizing:"border-box"};
+  const eqCSS={width:"100%",padding:"9px 8px",border:"1.5px solid #eee",borderRadius:6,fontSize:13,fontFamily:"inherit",background:"#fafafa",boxSizing:"border-box"};
 
   return(
     <div style={{background:C.bg,minHeight:"100vh"}}>
@@ -276,7 +258,7 @@ export default function App(){
           <Row cols={1}><Input label="Dirección" value={data.aliado.dir} onChange={v=>upd("aliado","dir",v)} error={er("aliado.dir")}/></Row>
           <Row><Input label="Teléfono" value={data.aliado.tel} onChange={v=>upd("aliado","tel",v)} numeric error={er("aliado.tel")} hint="Solo números"/><Input label="Correo electrónico" value={data.aliado.correo} onChange={v=>upd("aliado","correo",v)} error={er("aliado.correo")} placeholder="correo@empresa.com"/></Row>
           <Row cols={1}><Input label="Representante legal (nombre completo)" value={data.aliado.rep} onChange={v=>upd("aliado","rep",v)} error={er("aliado.rep")} hint="Se mostrará en mayúsculas en el contrato"/></Row>
-          <Row><Input label="Cédula del representante" value={data.aliado.cc} onChange={v=>upd("aliado","cc",v)} numeric error={er("aliado.cc")} hint="Solo números, se formateará automáticamente (ej: 1.000.180.024)"/><Input label="Expedida en" value={data.aliado.ccExp} onChange={v=>upd("aliado","ccExp",v)} error={er("aliado.ccExp")}/></Row>
+          <Row><Input label="Cédula del representante" value={data.aliado.cc} onChange={v=>upd("aliado","cc",v)} numeric error={er("aliado.cc")} hint="Solo números — se formateará con puntos (ej: 1.000.180.024)"/><Input label="Expedida en" value={data.aliado.ccExp} onChange={v=>upd("aliado","ccExp",v)} error={er("aliado.ccExp")} hint="Ciudad o municipio de expedición"/></Row>
           <div style={nav}><button style={btnP} onClick={next}>Siguiente</button></div>
         </div>}
 
@@ -301,17 +283,17 @@ export default function App(){
               ))}</tr></thead>
               <tbody>{data.equipos.map((r,i)=>(
                 <tr key={i}>
-                  <td style={{padding:"6px 4px"}}><input value={r.tipo} onChange={e=>updEquip(i,"tipo",e.target.value)} style={eqInputCSS} placeholder="Ej: Estación HCPS-002"/></td>
-                  <td style={{padding:"6px 4px",width:65}}><input value={r.cant} onChange={e=>updEquip(i,"cant",numOnly(e.target.value))} inputMode="numeric" style={{...eqInputCSS,textAlign:"center"}}/></td>
-                  <td style={{padding:"6px 4px",width:100}}><input value={r.unitario} onChange={e=>updEquip(i,"unitario",numOnly(e.target.value))} inputMode="numeric" style={{...eqInputCSS,textAlign:"right"}} placeholder="$"/></td>
-                  <td style={{padding:"6px 4px",width:100}}><input value={r.total} onChange={e=>updEquip(i,"total",numOnly(e.target.value))} inputMode="numeric" style={{...eqInputCSS,textAlign:"right"}} placeholder="$"/></td>
+                  <td style={{padding:"6px 4px"}}><input value={r.tipo} onChange={e=>updEquip(i,"tipo",e.target.value)} style={eqCSS} placeholder="Ej: Estación HCPS-002"/></td>
+                  <td style={{padding:"6px 4px",width:65}}><input value={r.cant} onChange={e=>updEquip(i,"cant",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"center"}}/></td>
+                  <td style={{padding:"6px 4px",width:100}}><input value={r.unitario} onChange={e=>updEquip(i,"unitario",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"right"}} placeholder="$"/></td>
+                  <td style={{padding:"6px 4px",width:100}}><input value={r.total} onChange={e=>updEquip(i,"total",numOnly(e.target.value))} inputMode="numeric" style={{...eqCSS,textAlign:"right"}} placeholder="$"/></td>
                   <td style={{padding:"6px 4px",width:36}}>{data.equipos.length>1&&<button onClick={()=>removeRow(i)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#c0392b",fontWeight:700,lineHeight:1}} title="Eliminar fila">×</button>}</td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
           <button onClick={addRow} style={{marginTop:12,padding:"8px 16px",fontSize:12,fontWeight:600,border:`1.5px dashed ${C.green}`,borderRadius:6,background:"transparent",color:C.green,cursor:"pointer",fontFamily:"inherit"}}>+ Agregar equipo</button>
-          {tried[step]&&errors["equipos"]&&<div style={{...errCSS,marginTop:8}}>{errors["equipos"]}</div>}
+          {tried[step]&&errors["equipos"]&&<div style={errCSS}>{errors["equipos"]}</div>}
           <div style={nav}><button style={btnS} onClick={()=>setStep(1)}>Atrás</button><button style={btnP} onClick={next}>Siguiente</button></div>
         </div>}
 
@@ -320,9 +302,10 @@ export default function App(){
           <Row><Input label="Nombre del banco" value={data.banco.banco} onChange={v=>upd("banco","banco",v)} error={er("banco.banco")}/><Input label="Propietario de la cuenta" value={data.banco.prop} onChange={v=>upd("banco","prop",v)} error={er("banco.prop")}/></Row>
           <Row><Input label="Identificación del titular" value={data.banco.id} onChange={v=>upd("banco","id",v)} numeric error={er("banco.id")} hint="Solo números"/><Select label="Tipo de cuenta" value={data.banco.tipo} onChange={v=>upd("banco","tipo",v)} options={["Ahorros","Corriente"]} error={er("banco.tipo")}/></Row>
           <Row cols={1}><Input label="N.° de cuenta" value={data.banco.num} onChange={v=>upd("banco","num",v)} numeric error={er("banco.num")} hint="Solo números"/></Row>
-          <Row><Input label="Teléfono asociado" value={data.banco.tel} onChange={v=>upd("banco","tel",v)} numeric error={er("banco.tel")} hint="Solo números"/><Input label="Correo asociado" value={data.banco.correo} onChange={v=>upd("banco","correo",v)} error={er("banco.correo")}/></Row>
-          <p style={{fontSize:14,fontWeight:600,color:C.purple,margin:"8px 0 20px"}}>Fecha de suscripción</p>
-          <Row cols={3}><Select label="Día" value={data.firma.dia} onChange={v=>upd("firma","dia",v)} options={DAYS} error={er("firma.dia")}/><Select label="Mes" value={data.firma.mes} onChange={v=>upd("firma","mes",v)} options={MONTHS} error={er("firma.mes")}/><Select label="Año" value={data.firma.anio} onChange={v=>upd("firma","anio",v)} options={YEARS} error={er("firma.anio")}/></Row>
+          <div style={{background:"#f8f8f6",borderRadius:8,padding:16,marginTop:8}}>
+            <p style={{fontSize:12,color:C.muted}}>Fecha de suscripción: <b style={{color:C.dark}}>{data.firma.dia} de {data.firma.mes} de {data.firma.anio}</b></p>
+            <p style={{fontSize:10,color:C.muted,marginTop:4,fontStyle:"italic"}}>Se toma automáticamente la fecha de hoy.</p>
+          </div>
           <div style={nav}><button style={btnS} onClick={()=>setStep(2)}>Atrás</button><button style={btnP} onClick={next}>Revisar contrato</button></div>
         </div>}
 
